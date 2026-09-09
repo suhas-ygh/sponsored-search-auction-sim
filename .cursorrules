@@ -1,0 +1,33 @@
+# sponsored-search-auction-sim — Cursor rules
+
+## What this is
+An open-source teaching/demo simulator of sponsored product search auctions
+(retail media). All data is synthetic. This is an independent project, not
+affiliated with Walmart or any retailer.
+
+## Layout
+- `src/auction_sim/` — library code (catalog, auction, pacing, bidders, metrics, briefs, analysis, simulate)
+- `scripts/` — CLIs (`run_simulation.py`, `generate_data.py`)
+- `app/` — Streamlit dashboard (thin; all logic lives in `src/`)
+- `evals/` — behavior evals for optimizer/agent changes (run before merging those)
+- `tests/` — unit tests for auction mechanics
+
+## Commands
+- Install: `pip install -e ".[dev]"`
+- Demo run: `python scripts/run_simulation.py --n-auctions 20000 --budget 500`
+- Tests: `pytest -q`
+- Dashboard: `streamlit run app/streamlit_app.py`
+
+## Conventions
+- Keep `run_auction` pure-ish: no I/O, RNG passed in, catalog pre-indexed by product_id.
+- New bidder strategies go in `bidders.py` and must subclass `Bidder`.
+- Optimizer changes must keep `evals/test_optimizer.py` green; tighten the
+  tolerance instead of deleting the eval if behavior genuinely improves.
+- LLM features live in `src/auction_sim/llm/`:
+  - `client.py` — provider clients (stdlib urllib only); `FakeLLMClient` for tests.
+  - `tools.py` — the JSON-protocol tool loop; new agent capabilities become `Tool`s here.
+  - The deterministic heuristic is always the system of record; the model
+    interprets and explains, and may only act through tools.
+  - Planner/narrator changes must keep `evals/test_planner.py` green.
+- Synthetic data only. Never add real retailer, brand, or marketplace data.
+- Keep the Streamlit app a thin view layer over `simulate.run_campaign`.
